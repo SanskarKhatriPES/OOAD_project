@@ -1,0 +1,43 @@
+db-queries:
+  unit:
+    select: SELECT * FROM unit
+    insert: INSERT INTO unit(unit_code, unit_name, is_fractional, fractional_digits) VALUES (?, ?, ?, ?)
+    delete: DELETE FROM unit
+  address:
+    select: SELECT * FROM address
+    insert: INSERT INTO address (addr_line_1, addr_line_2, city, state, country, pincode) VALUES (?, ?, ?, ?, ?, ?)
+    delete: DELETE FROM address
+  company:
+    select: SELECT * FROM company
+    insert: INSERT INTO company (company_name, headquarter_addr_id, gstin) VALUES (?, ?, ?)
+    delete: DELETE FROM company
+  branchLocation:
+    select: SELECT * FROM branch_location
+    insert: INSERT INTO branch_location (bl_name, company_id, bl_addr_id) VALUES (?, ?, ?)
+    delete: DELETE FROM branch_location
+  item:
+    select: SELECT * FROM item
+    insert: INSERT INTO item (item_name, batch_number, unit_code, purchase_price, selling_price, expiry_date) VALUES (?, ?, ?, ?, ?, ?)
+    delete: DELETE FROM item
+  purchaseInvoice:
+    select: SELECT * FROM purchase_invoice
+    insert: INSERT INTO purchase_invoice (branch_location_id, vendor_name, bill_to_addr_id, bill_amount, total_gst, invoice_date) VALUES (?, ?, ?, ?, ?, ?)
+    delete: DELETE FROM purchase_invoice
+  purchaseInvoiceItem:
+    select: SELECT * FROM pi_items
+    insert: INSERT INTO pi_items (item_id, pi_id, quantity, total_price, gst_amount) VALUES (?, ?, ?, ?, ?)
+    delete: DELETE FROM pi_items
+  salesInvoice:
+    select: SELECT * FROM sales_invoice
+    insert: INSERT INTO sales_invoice (branch_location_id, customer_name, ship_to_addr_id, bill_to_addr_id, bill_amount, total_gst, invoice_date) VALUES (?, ?, ?, ?, ?, ?, ?)
+    delete: DELETE FROM sales_invoice
+  salesInvoiceItem:
+    select: SELECT * FROM si_items
+    insert: INSERT INTO si_items (item_id, si_id, quantity, total_price, gst_amount) VALUES (?, ?, ?, ?, ?)
+    delete: DELETE FROM si_items
+  inventory:
+    select: SELECT * FROM inventory
+    insert: INSERT INTO inventory (item_id, stock_qty, branch_location_id, expiry_date) VALUES (?, ?, ?, ?)
+    delete: DELETE FROM inventory
+    update: UPDATE inventory SET stock_qty = ? WHERE branch_location_id = ? AND item_id = ?
+    
