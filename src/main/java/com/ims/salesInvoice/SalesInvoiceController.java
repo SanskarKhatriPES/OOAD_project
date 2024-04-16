@@ -125,7 +125,7 @@ public class SalesInvoiceController {
 					if (invRepo.findAvailableQuantity(si.getBranchLocation().getId(), item.getItem().getId()).compareTo(item.getQuantity()) < 0) {
 						bindingResult.addError(new FieldError(SalesInvoice.class.getName(), "orderItems.quantity", messageSource.getMessage("SalesInvoiceItem.quantity.InsufficientStock", new Object[] {item.getQuantity(), item.getItem().getId()}, Locale.ENGLISH)));
 					}
-					if (invRepo.findExpiryDateIfExists(si.getBranchLocation().getId(), item.getItem().getId()).compareTo(si.getInvoiceDate()) < 0) {
+					if (invRepo.findExpiryDateIfExists(si.getBranchLocation().getId(), item.getItem().getId()) != null && invRepo.findExpiryDateIfExists(si.getBranchLocation().getId(), item.getItem().getId()).compareTo(si.getInvoiceDate()) < 0) {
 						bindingResult.addError(new FieldError(SalesInvoice.class.getName(), "orderItems.expiryDate", messageSource.getMessage("SalesInvoiceItem.quantity.ExpiredStock", new Object[] {item.getItem().getId()}, Locale.ENGLISH)));
 					}
 				}

@@ -199,7 +199,7 @@ def view_pi():
                     # "Selling Price": order_item["item"]["sellingPrice"],
                     # "Purchase Price": order_item["item"]["purchasePrice"],
                     # "Expiry Date": order_item["item"]["expiryDate"],
-                    # "Quantity": order_item["quantity"],
+                    "Quantity": order_item["quantity"],
                     "Total Price": order_item["totalPrice"],
                     "GST Amount": order_item["gstAmount"]
                 })

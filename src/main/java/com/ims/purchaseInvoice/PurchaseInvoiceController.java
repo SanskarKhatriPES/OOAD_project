@@ -119,7 +119,7 @@ public class PurchaseInvoiceController {
 					bindingResult.addError(new FieldError(PurchaseInvoice.class.getName(), "orderItems.id", messageSource.getMessage("PurchaseInvoiceItem.item.NonExistent", new Object[] {item.getItem().getId()}, Locale.ENGLISH)));
 				} else if (blRepo.existsById(pi.getBranchLocation().getId()) && 
 						(item.getQuantity() != null && item.getQuantity().compareTo(BigDecimal.ZERO) > 0)) { 
-					if (invRepo.findExpiryDateIfExists(pi.getBranchLocation().getId(), item.getItem().getId()).compareTo(pi.getInvoiceDate()) < 0) {
+					if (invRepo.findExpiryDateIfExists(pi.getBranchLocation().getId(), item.getItem().getId()) != null && invRepo.findExpiryDateIfExists(pi.getBranchLocation().getId(), item.getItem().getId()).compareTo(pi.getInvoiceDate()) < 0) {
 						bindingResult.addError(new FieldError(PurchaseInvoice.class.getName(), "orderItems.expiryDate", messageSource.getMessage("PurchaseInvoiceItem.quantity.ExpiredStock", new Object[] {item.getItem().getId()}, Locale.ENGLISH)));
 					}
 				}
