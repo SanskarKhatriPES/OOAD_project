@@ -20,6 +20,26 @@ def get_error_lists(e_map_str):
     for e in e_list:
         st.error(e)
 
+def fetch_branch_location_ids():
+    url = URL + "/branchLocation"
+    response = requests.get(url)
+    if response.status_code == 200:
+        locations = response.json()["branchLocations"]
+        return {location["id"]: location["name"] + ", " + location["company"]["name"] for location in locations}
+    else:
+        st.error(f"Failed to fetch branch locations. Status code: {response.status_code}")
+        return []
+
+def fetch_item_ids():
+    url = URL + "/item"
+    response = requests.get(url)
+    if response.status_code == 200:
+        items = response.json()["items"]
+        return {item["id"]: item["name"] + ", " + item["batchNumber"] for item in items}
+    else:
+        st.error(f"Failed to fetch items. Status code: {response.status_code}")
+        return []
+
 def fetch_company_ids():
     url = URL + "/company"
     response = requests.get(url)
@@ -50,26 +70,6 @@ def fetch_unit_codes():
         st.error(f"Failed to fetch unit data. Status code: {response.status_code}")
         return []
 
-def fetch_item_ids():
-    url = URL + "/item"
-    response = requests.get(url)
-    if response.status_code == 200:
-        items = response.json()["items"]
-        return {item["id"]: item["name"] + ", " + item["batchNumber"] for item in items}
-    else:
-        st.error(f"Failed to fetch items. Status code: {response.status_code}")
-        return []
-
-def fetch_branch_location_ids():
-    url = URL + "/branchLocation"
-    response = requests.get(url)
-    if response.status_code == 200:
-        locations = response.json()["branchLocations"]
-        return {location["id"]: location["name"] + ", " + location["company"]["name"] for location in locations}
-    else:
-        st.error(f"Failed to fetch branch locations. Status code: {response.status_code}")
-        return []
-
 # View Functions
 def view_units():
     st.title("Units")
@@ -81,7 +81,28 @@ def view_units():
     else:
         st.error("Error retrieving data.")
 
+def view_items():
+    st.title("Items")
+    url = URL + "/item"
+    response = requests.get(url)
 
+    if response.status_code == 200:
+        data = response.json()
+
+        table_data = []
+        for item in data["items"]:
+            table_data.append({
+                "Name": item["name"],
+                "Batch Number": item["batchNumber"],
+                "Unit Code": item["unit"]["unitCode"],
+                "Selling Price": item["sellingPrice"],
+                "Purchase Price": item["purchasePrice"],
+                "Expiry Date": item["expiryDate"]
+            })
+        df = pd.DataFrame(table_data)
+        st.table(df)
+    else:
+        st.error("Error retrieving data.")
 
 def view_address():
     st.title("Address")
@@ -114,29 +135,6 @@ def view_company():
     else:
         st.error("Error retrieving data.")
 
-def view_items():
-    st.title("Items")
-    url = URL + "/item"
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        data = response.json()
-
-        table_data = []
-        for item in data["items"]:
-            table_data.append({
-                "Name": item["name"],
-                "Batch Number": item["batchNumber"],
-                "Unit Code": item["unit"]["unitCode"],
-                "Selling Price": item["sellingPrice"],
-                "Purchase Price": item["purchasePrice"],
-                "Expiry Date": item["expiryDate"]
-            })
-        df = pd.DataFrame(table_data)
-        st.table(df)
-    else:
-        st.error("Error retrieving data.")
-
 def view_branchLocation():
     st.title("Branch Locations")
     url = URL + "/branchLocation"
@@ -163,6 +161,53 @@ def view_branchLocation():
     else:
         st.error("Error retrieving data.")
 
+def view_pi():
+    st.title("Purchase Invoice")
+    url = URL + "/pi"
+    response = requests.get(url)
+
+    # Check if the request was successful (status code 200)
+    if response.status_code == 200:
+        data = response.json()
+
+        # Extract relevant data for the table
+        table_data = []
+        for invoice in data["purchaseInvoices"]:
+            for order_item in invoice["orderItems"]:
+                table_data.append({
+                    # "Invoice ID": invoice["id"],
+                    "Invoice Date": invoice["invoiceDate"],
+                    # "Branch Location ID": invoice["branchLocation"]["id"],
+                    "Branch Location Name": invoice["branchLocation"]["name"],
+                    # "Company ID": invoice["branchLocation"]["company"]["id"],
+                    "Company Name": invoice["branchLocation"]["company"]["name"],
+                    # "Company GSTIN": invoice["branchLocation"]["company"]["gstin"],
+                    "Vendor Name": invoice["vendorName"],
+                    # "Billing Address ID": invoice["billingAddress"]["addrId"],
+                    # "Billing Address Line 1": invoice["billingAddress"]["addressLine1"],
+                    # "Billing Address Line 2": invoice["billingAddress"]["addressLine2"],
+                    # "Billing City": invoice["billingAddress"]["city"],
+                    # "Billing State": invoice["billingAddress"]["state"],
+                    # "Billing Country": invoice["billingAddress"]["country"],
+                    # "Billing Pincode": invoice["billingAddress"]["pincode"],
+                    # "Total GST": invoice["totalGst"],
+                    # "Bill Amount": invoice["billAmount"],
+                    # "Item ID": order_item["item"]["id"],
+                    "Item Name": order_item["item"]["name"],
+                    # "Batch Number": order_item["item"]["batchNumber"],
+                    # "Unit Code": order_item["item"]["unit"]["unitCode"],
+                    # "Selling Price": order_item["item"]["sellingPrice"],
+                    # "Purchase Price": order_item["item"]["purchasePrice"],
+                    # "Expiry Date": order_item["item"]["expiryDate"],
+                    # "Quantity": order_item["quantity"],
+                    "Total Price": order_item["totalPrice"],
+                    "GST Amount": order_item["gstAmount"]
+                })
+        df = pd.DataFrame(table_data)
+        st.table(df)
+    else:
+        st.error(f"Failed to fetch data. Status code: {response.status_code}")
+
 def view_si():
     st.title("Sales Invoice")
     url = URL + "/si"
@@ -187,6 +232,24 @@ def view_si():
     else:
         st.error("Error retrieving data.")
 
+def view_inventory():
+    st.title("Inventory")
+    url = URL + "/inventory"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        table_data = []
+        for inventory in data["inventory"]:
+            table_data.append({
+                "Branch Location Name": inventory["branchLocation"]["name"],
+                "Item Name": inventory["item"]["name"],
+                "Quantity": inventory["stockQuantity"],
+                "Expiry Date": inventory["expiryDate"]
+            })
+        df = pd.DataFrame(table_data)
+        st.table(df)
+    else:
+        st.error("Error retrieving data.")
 
 # Form Functions
 def form_unit():
@@ -213,7 +276,43 @@ def form_unit():
         else:
             get_error_lists(response.text)
 
+def form_item():
+    st.title("Item Form")
 
+    units = fetch_unit_codes()
+    unit_codes = list(units.keys())
+
+    name = st.text_input("Item Name", "")
+    batch_number = st.text_input("Batch Number", "")
+    unit_code = st.selectbox("Unit", unit_codes, format_func=lambda x: units[x])
+    selling_price = st.number_input("Selling Price", min_value=0.0)
+    purchase_price = st.number_input("Purchase Price", min_value=0.0)
+#    opening_balance_date = st.date_input("Opening Balance Date", value=None)
+#    opening_balance_qty = st.number_input("Opening Balance Quantity", min_value=0)
+    expiry_date = st.date_input("Expiry Date", value=None)
+    
+    if st.button("Submit"):
+        item_data = {
+            "name": name,
+            "batchNumber": batch_number,
+            "unit": {
+                "unitCode": unit_code
+            },
+            "sellingPrice": selling_price,
+            "purchasePrice": purchase_price,
+#            "openingBalanceDate": str(opening_balance_date),
+#            "openingBalanceQty": opening_balance_qty,
+            "expiryDate": str(expiry_date) if expiry_date else ""
+        }
+
+        st.table(item_data)
+
+        response = requests.post(URL + "/item", json=item_data)
+        if response.status_code == 200:
+            st.success("Data submitted successfully!")
+        else:
+            get_error_lists(response.text)
+    
 def form_address():
     st.title("Address Form")
 
@@ -240,6 +339,36 @@ def form_address():
         else:
             get_error_lists(response.text)
 
+def form_branchLocation():
+    st.title("Branch Location Form")
+
+    companies = fetch_company_ids()
+    company_ids = list(companies.keys())
+    
+    addresses = fetch_address_ids()
+    address_ids = list(addresses.keys())
+
+    name = st.text_input("Branch Location Name", "")
+    company_id = st.selectbox("Company ID", company_ids, format_func=lambda x: companies[x])
+    address_id = st.selectbox("Address ID", address_ids, format_func=lambda x: addresses[x])
+
+    if st.button("Submit"):
+        branch_location_data = {
+            "name": name,
+            "company": {
+                "id": company_id
+            },
+            "address": {
+                "addrId": address_id
+            }
+        }
+        st.table(branch_location_data)
+
+        response = requests.post(URL + "/branchLocation", json=branch_location_data)
+        if response.status_code == 200:
+            st.success("Data submitted successfully!")
+        else:
+            get_error_lists(response.text)
 
 def form_company():
     st.title("Company Form")
@@ -267,69 +396,57 @@ def form_company():
         else:
             get_error_lists(response.text)
 
-def form_item():
-    st.title("Item Form")
+def form_pi():
+    st.title("Purchase Invoice Form")
 
-    units = fetch_unit_codes()
-    unit_codes = list(units.keys())
-
-    name = st.text_input("Item Name", "")
-    batch_number = st.text_input("Batch Number", "")
-    unit_code = st.selectbox("Unit", unit_codes, format_func=lambda x: units[x])
-    selling_price = st.number_input("Selling Price", min_value=0.0)
-    purchase_price = st.number_input("Purchase Price", min_value=0.0)
-    # opening_balance_date = st.date_input("Opening Balance Date", value=None)
-    # opening_balance_qty = st.number_input("Opening Balance Quantity", min_value=0)
-    expiry_date = st.date_input("Expiry Date", value=None)
-
-    if st.button("Submit"):
-        item_data = {
-            "name": name,
-            "batchNumber": batch_number,
-            "unit": {
-                "unitCode": unit_code
-            },
-            "sellingPrice": selling_price,
-            "purchasePrice": purchase_price,
-            # "openingBalanceDate": str(opening_balance_date),
-            # "openingBalanceQty": opening_balance_qty,
-            "expiryDate": str(expiry_date) if expiry_date else ""
-        }
-
-        st.table(item_data)
-
-        response = requests.post(URL + "/item", json=item_data)
-        if response.status_code == 200:
-            st.success("Data submitted successfully!")
-        else:
-            get_error_lists(response.text)
-
-def form_branchLocation():
-    st.title("Branch Location Form")
-
-    companies = fetch_company_ids()
-    company_ids = list(companies.keys())
-
+    branch_locations = fetch_branch_location_ids()
+    bl_ids = list(branch_locations.keys())
+    
     addresses = fetch_address_ids()
     address_ids = list(addresses.keys())
+    
+    items = fetch_item_ids()
+    item_ids = list(items.keys())
 
-    name = st.text_input("Branch Location Name", "")
-    company_id = st.selectbox("Company ID", company_ids, format_func=lambda x: companies[x])
-    address_id = st.selectbox("Address ID", address_ids, format_func=lambda x: addresses[x])
+    invoice_date = st.date_input("Invoice Date", key="invoice_date")
+    vendor_name = st.text_input("Vendor Name", key="vendor_name")
+    branch_location_id = st.selectbox("Branch Location ID", bl_ids, format_func=lambda x: branch_locations[x], key="branch_location_id")
+    billing_address_id = st.selectbox("Billing Address ID", address_ids, format_func=lambda x: addresses[x], key="billing_address_id")
+    branch_location_to_send = {"id": branch_location_id}
+    billing_address_to_send = {"addrId": billing_address_id}
+
+    item_id = st.selectbox("Item ID", item_ids, format_func=lambda x: items[x], key="item_id")
+    quantity = st.number_input("Quantity", min_value=1, step=1, value=1, key="quantity")
+    order_items = [{"item": {"id": item_id}, "quantity": quantity}]
+
+    # Create order items    
+    # order_items = []
+    # st.header("Order Items")
+    # add_item_button = st.button("Add Item")
+    # if add_item_button:
+        # st.write(add_item_button)
+        # with st.form(f"item_form {len(order_items)}"):
+            # item_id = st.selectbox(f"Item ID {len(order_items)}", item_ids, key = f"item_id_{len(order_items)}")
+            # quantity = st.number_input("Quantity", key=f"quantity_{len(order_items)}")
+            # item = {"item": {"id": item_id}, "quantity": quantity}
+            # test = test + 1
+            # if st.form_submit_button("Enter Item"):
+            #     order_items.append(item)
+            #     st.write(f"Item {len(order_items)} added!")
+            #     add_item_button = False
 
     if st.button("Submit"):
-        branch_location_data = {
-            "name": name,
-            "company": {
-                "id": company_id
-            },
-            "address": {
-                "addrId": address_id
-            }
+        invoice_data = {
+            "invoiceDate": str(invoice_date),
+            "branchLocation": branch_location_to_send,
+            "billingAddress": billing_address_to_send,
+            "vendorName": vendor_name,
+            "orderItems": order_items
         }
-        st.table(branch_location_data)
 
-        response = requests.post(URL + "/branchLocation", json=branch_location_data)
+        # st.subheader("JSON Data")
+        # st.json(invoice_data)
+        response = requests.post(URL + "/pi", json=invoice_data)
         if response.status_code == 200:
             st.success("Data submitted successfully!")
         else:
@@ -340,10 +457,10 @@ def form_si():
 
     branch_locations = fetch_branch_location_ids()
     bl_ids = list(branch_locations.keys())
-
+    
     addresses = fetch_address_ids()
     address_ids = list(addresses.keys())
-
+    
     items = fetch_item_ids()
     item_ids = list(items.keys())
 
@@ -378,41 +495,54 @@ def form_si():
         else:
             get_error_lists(response.text)
 
-
 # Sidebar menu
 menu = [
     "View Units",
+    "View Items",
     "View Address",
     "View Company",
+    "View Branch Location",
+    "View Purchase Invoice",
+    "View Sales Invoice",
+    "View Inventory",
     "Add Unit",
+    "Add Item",
     "Add Address",
-    "Add Company"
+    "Add Company",
+    "Add Branch Locations",
+    "Add Purchase Invoice",
+    "Add Sales Invoice"
 ]
 page = st.sidebar.selectbox("Menu", menu)
-
 
 # Render page
 if page == "View Units":
     view_units()
+elif page == "View Items":
+    view_items()
 elif page == "View Address":
     view_address()
 elif page == "View Company":
     view_company()
-elif page == "View Items":
-    view_items()
 elif page == "View Branch Location":
     view_branchLocation()
+elif page == "View Purchase Invoice":
+    view_pi()
 elif page == "View Sales Invoice":
     view_si()
+elif page == "View Inventory":
+    view_inventory()
 elif page == "Add Unit":
     form_unit()
+elif page == "Add Item":
+    form_item()
 elif page == "Add Address":
     form_address()
 elif page == "Add Company":
     form_company()
-elif page == "Add Item":
-    form_item()
 elif page == "Add Branch Locations":
     form_branchLocation()
+elif page == "Add Purchase Invoice":
+    form_pi()
 elif page == "Add Sales Invoice":
     form_si()
